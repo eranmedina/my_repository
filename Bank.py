@@ -28,6 +28,13 @@ from leumi import Leumi
 from poalim import Poalim
 from discont import Discont
 from igud import Igud
+from benleumi import Benleumi
+from marcantil import Marcantil
+from mizrahi_tefahot import Mizrahi_Tefahot
+from ubank import Ubank
+from masad import Masad
+from jerusalem import Jerusalem
+from yahav import Yahav
 
 logging.root.handlers = []
 log_format = '[%(asctime)s]| %(levelname)-7s| %(message)-100s| {%(name)s|%(funcName)s|%(lineno)-3s}'
@@ -43,18 +50,19 @@ logger = logging.getLogger(__name__)
 # driver = webdriver.Remote(command_executor='http://127.0.0.1:4444/wd/hub', desired_capabilities=caps)
 
 bank_dict = {
+        '04': {'name': 'yahav', 'url': 'https://www.bank-yahav.co.il', 'title': 'בנק יהב'},
         '10': {'name': 'leumi', 'url': 'https://hb2.bankleumi.co.il', 'title': 'בנק לאומי'},
         #'11': {'name': 'discont', 'url': 'https://www.discountbank.co.il', 'title': 'בנק דיסקונט'},
-        '11': {'name': 'discont', 'url': 'https://start.telebank.co.il/LoginPages/Logon', 'title': 'בנק דיסקונט לישראל'},
+        '11': {'name': 'discont', 'url': 'https://start.telebank.co.il/LoginPages/Logon?bank=d', 'title': 'בנק דיסקונט לישראל'},
         '12': {'name': 'poalim', 'url': 'https://www.bankhapoalim.co.il', 'title': 'בנק הפועלים'},
         '13': {'name': 'igud', 'url': 'https://hb.unionbank.co.il', 'title': 'כניסה לחשבונך'},
         '14': {'name': 'otsar', 'url': 'https://online.bankotsar.co.il/wps/portal', 'title': 'בנק אוצר החייל'},
-        #'17': {'name': 'marcantil', 'url': 'https://online.bankotsar.co.il/wps/portal', 'title': 'בנק לאומי'},
-        #'20': {'name': 'mizrahi', 'url': 'https://online.bankotsar.co.il/wps/portal', 'title': 'בנק לאומי'},
-        #'26': {'name': 'ubank', 'url': 'https://online.bankotsar.co.il/wps/portal', 'title': 'בנק לאומי'},
-        #'31': {'name': 'benleumi', 'url': 'https://online.bankotsar.co.il/wps/portal', 'title': 'בנק לאומי'},
-        #'46': {'name': 'masad', 'url': 'https://online.bankotsar.co.il/wps/portal', 'title': 'בנק לאומי'},
-        #'54': {'name': 'jerusalem', 'url': 'https://online.bankotsar.co.il/wps/portal', 'title': 'בנק לאומי'}
+        '17': {'name': 'marcantil', 'url': 'https://start.telebank.co.il/LoginPages/Logon?bank=m', 'title': 'מרכנתיל'},
+        '20': {'name': 'mizrahi_tefahot', 'url': 'https://www.mizrahi-tefahot.co.il', 'title': 'מזרחי-טפחות'},
+        '26': {'name': 'ubank', 'url': 'https://online.u-bank.net/wps/portal', 'title': 'U-Bank'},
+        '31': {'name': 'benleumi', 'url': 'https://online.fibi.co.il/wps/portal', 'title': 'הבנק הבינלאומי'},
+        '46': {'name': 'masad', 'url': 'https://online.bankmassad.co.il/wps/portal', 'title': 'בנק מסד'},
+        '54': {'name': 'jerusalem', 'url': 'https://services.bankjerusalem.co.il/Pages/Login.aspx', 'title': 'בנק ירושלים'}
 }
 
 
