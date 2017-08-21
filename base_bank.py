@@ -1,9 +1,8 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 import os
 import logging
 import time
-import glob
-from banks.base_wps import BaseWps
+from collections import defaultdict
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.common.by import By
@@ -14,20 +13,28 @@ screenshots_folder = os.path.join(script_folder, 'Screesnshots')
 downloads_folder = os.path.join(os.environ['USERPROFILE'], 'Downloads')
 
 
-class Otsar(BaseWps):
+class BaseBank(object):
     def __init__(self, driver, opt_dict, bank_dict):
-        super(Otsar, self).__init__(driver, opt_dict, bank_dict)
+        """Return a Bank object whose name is *name*."""
+        self.driver = driver
+        self.name = bank_dict[opt_dict['bank_code']]['name']
+        self.login_url = bank_dict[opt_dict['bank_code']]['login_url']
+        self.main_url = bank_dict[opt_dict['bank_code']]['main_url']
+        self.title = bank_dict[opt_dict['bank_code']]['title']
+        self.opt_dict = opt_dict
+        self.results_dict = defaultdict(dict)
+        self.results_dict['user_data']['account_no'] = opt_dict['account_no']
+        self.results_dict['user_data']['branch_no'] = opt_dict['branch_no']
+        self.results_dict['user_data']['bank_code'] = opt_dict['bank_code']
 
-    def login(self):
-        logging.info('Login started')
-        frame = self.driver.find_element_by_id('LoginIframeTag')
-        self.driver.switch_to.frame(frame)
-        self.driver.find_element_by_id('username').send_keys(''.join(self.opt_dict['cred'][1:][::3]))
-        self.driver.find_element_by_id('password').send_keys(''.join(self.opt_dict['cred'][0:][::3]))
-        self.driver.find_element_by_id('login_btn').click()
-        # WebDriverWait(driver, 15).until(ec.presence_of_element_located((By.CLASS_NAME, 'fibi_branch')))
-        # WebDriverWait(driver, 15).until(ec.presence_of_element_located((By.CLASS_NAME, 'acc_num')))
+    def navigate_to_login(self, **kwargs):
+        logging.info('Navigate to login started')
+        self.driver.get(self.login_url)
+        WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.ID, kwargs['sync_obj'])))
+        assert self.title in self.driver.title
+        logging.info('Navigate to login finished')
 
+    def verify_login(self):
         body_text = ''
         for i in range(10):  # waiting for excel export production
             body_text = self.driver.find_element_by_tag_name('body').text
@@ -44,4 +51,4 @@ class Otsar(BaseWps):
             self.driver.save_screenshot(os.path.join(screenshots_folder, 'login_wrong.png'))
             raise ValueError('Wrong branch/account - %s/%s' % (self.opt_dict['branch_no'], self.opt_dict['account_no']))
 
-        logging.info('Login finished')
+    logging.info('Login finished')

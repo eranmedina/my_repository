@@ -1,4 +1,4 @@
-# !/usr/bin/env python
+#!/usr/bin/env python
 import os
 import logging
 import time
@@ -14,22 +14,29 @@ screenshots_folder = os.path.join(script_folder, 'Screesnshots')
 downloads_folder = os.path.join(os.environ['USERPROFILE'], 'Downloads')
 
 
-class Igud(BaseBank):
+class BaseTelebank(BaseBank):
     def __init__(self, driver, opt_dict, bank_dict):
-        super(Igud, self).__init__(driver, opt_dict, bank_dict)
+        super(BaseTelebank, self).__init__(driver, opt_dict, bank_dict)
 
     def navigate_to_login(self):
         logging.info('Navigate to login started')
         self.driver.get(self.url)
-        WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.ID, 'login')))
+        # WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.ID, 'hpc-login-toggle')))
+        WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.ID, 'inputform')))
         assert self.title in self.driver.title
         logging.info('Navigate to login finished')
 
     def login(self):
         logging.info('Login started')
-        self.driver.find_element_by_id('uid').send_keys(self.opt_dict['user_name'])
-        self.driver.find_element_by_id('password').send_keys(self.opt_dict['pass'])
-        self.driver.find_element_by_id('enter').click()
+        # self.driver.find_element_by_id('hpc-login-toggle').click()
+        # frame = self.driver.find_element_by_id('hpc-iframe')
+        # self.driver.switch_to.frame(frame)
+        self.driver.find_element_by_id('tzId').send_keys(self.opt_dict['user_id'])
+        self.driver.find_element_by_id('tzPassword').send_keys(self.opt_dict['pass'])
+        self.driver.find_element_by_id('aidnum').send_keys(self.opt_dict['ident_code'])
+        # form = self.driver.find_element_by_tag_name('form')
+        # form.submit()
+        self.driver.find_element_by_id('submitButton').click()
 
         body_text = ''
         for i in range(10):  # waiting for excel export production

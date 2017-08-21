@@ -3,7 +3,7 @@ import os
 import logging
 import time
 import glob
-
+from .base_bank import BaseBank
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.common.by import By
@@ -14,14 +14,9 @@ screenshots_folder = os.path.join(script_folder, 'Screesnshots')
 downloads_folder = os.path.join(os.environ['USERPROFILE'], 'Downloads')
 
 
-class Jerusalem(object):
+class Jerusalem(BaseBank):
     def __init__(self, driver, opt_dict, bank_dict):
-        """Return a Bank object whose name is *name*."""
-        self.driver = driver
-        self.name = bank_dict[opt_dict['bank_code']]['name']
-        self.url = bank_dict[opt_dict['bank_code']]['url']
-        self.title = bank_dict[opt_dict['bank_code']]['title']
-        self.opt_dict = opt_dict
+        super(Jerusalem, self).__init__(driver, opt_dict, bank_dict)
 
     def navigate_to_login(self):
         logging.info('Navigate to login started')
