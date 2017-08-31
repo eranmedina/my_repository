@@ -3,7 +3,7 @@ import os
 import logging
 import time
 import glob
-import csv
+import pyautogui
 from collections import defaultdict
 from banks.base_bank import BaseBank
 from selenium.webdriver.support.wait import WebDriverWait
@@ -66,19 +66,29 @@ class BaseWps(BaseBank):
 
         logging.info('Clicking on show results')
         self.driver.find_elements_by_class_name("fibi_btn")[0].click()  # show results
+        time.sleep(3)
         logging.info('Showing last trxs finished')
 
-    def export_data_click(self):
+    def export_data_click(self, export_format='csv'):
         logging.info('Clicking on export results')
-        WebDriverWait(self.driver, 10).until(ec.element_to_be_clickable((By.CSS_SELECTOR, 'a.excell')))
-        self.driver.find_element_by_css_selector('a.excell').click()  # export to csv
+        if export_format == 'csv':  # export to csv
+            WebDriverWait(self.driver, 10).until(ec.element_to_be_clickable((By.CSS_SELECTOR, 'a.excell')))
+            self.driver.find_element_by_css_selector('a.excell').click()
+        else:  # export to xls
+            WebDriverWait(self.driver, 10).until(ec.element_to_be_clickable((By.CLASS_NAME, 'fibi_btn')))
+            self.driver.find_elements_by_class_name('fibi_btn')[1].click()
 
-    def export_data(self):
-        self.export_data_click()
+    def export_data(self, action):
+        if action == 'last_trxs':
+            export_format = 'xls'
+        else:
+            export_format = 'csv'
+
+        self.export_data_click(export_format=export_format)
 
         files = []
         for i in range(10):  # waiting for excel export production
-            files = glob.glob(os.path.join(downloads_folder, '*.csv'))
+            files = glob.glob(os.path.join(downloads_folder, '*.%s' % export_format))
             if len(files) == 1:
                 break
             time.sleep(1)
@@ -95,12 +105,14 @@ class BaseWps(BaseBank):
         col_headers = []
         with open(os.path.join(downloads_folder, file)) as f:
             for row_num, row_data in enumerate(f):
-                if row_num > 0:  # data rows
-                    row_data = [col.strip() for col in row_data[1:-3].split('\",\"')]
+                if row_num > 2:  # data rows
+                    # row_data = [col.strip() for col in row_data[1:-3].split('\",\"')]
+                    row_data = [col.strip() for col in row_data.split('\t')[:-1]]
                     for col_num, col_data in enumerate(row_data):
-                        self.results_dict['last_trxs'][row_num]['%s' % col_headers[col_num]] = col_data
+                        self.results_dict['last_trxs'][row_num - 2]['%s' % col_headers[col_num]] = col_data
                 elif row_num == 0:  # headers row
-                    col_headers = [col.strip() for col in row_data[1:-3].split('\",\"')]
+                    # col_headers = [col.strip() for col in row_data[1:-3].split('\",\"')]
+                    col_headers = [col.strip() for col in row_data.split('\t')]
         os.remove(os.path.join(downloads_folder, file))
         # Read data from table
         # all_rows = driver.find_elements_by_tag_name("tr")
@@ -137,3 +149,25 @@ class BaseWps(BaseBank):
                     last_row_data = row_data.strip().split('\"')[3]
         self.results_dict['loans'] = last_row_data
         os.remove(os.path.join(downloads_folder, file))
+
+    def download_checks(self):
+        for link in self.driver.find_elements_by_xpath("//table[@id='dataTable077']//tbody//tr//*[@href]"):
+            if 'משיכת שיק' in link.text:
+                check_num = link.text.replace(' משיכת שיק', '')
+                main_win_handle = self.driver.current_window_handle
+                link.click()
+                time.sleep(2)
+                handles = self.driver.window_handles
+                for handle in handles:
+                    if handle != main_win_handle:
+                        self.driver.switch_to.window(handle)
+                        self.driver.maximize_window()
+                        time.sleep(2)
+                        pyautogui.click(1220, 215, duration=1)
+                        time.sleep(1)
+                        pyautogui.typewrite("check_%s" % check_num)
+                        time.sleep(1)
+                        pyautogui.hotkey('enter')
+                        time.sleep(1)
+                        self.driver.close()
+                        self.driver.switch_to.window(main_win_handle)

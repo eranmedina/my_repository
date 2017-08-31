@@ -2,14 +2,31 @@
 
 import json
 from argparse import ArgumentParser
-from collections import defaultdict
 import sys
 import os
 import logging
 import traceback
 import glob
+import time
+import pyautogui
 
 from selenium import webdriver
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.keys import Keys
+
+from banks.otsar import Otsar
+from banks.poalim import Poalim
+# from banks.leumi import Leumi
+# from banks.poalim import Poalim
+# from banks.discont import Discont
+# from banks.igud import Igud
+# from banks.benleumi import Benleumi
+# from banks.marcantil import Marcantil
+# from banks.mizrahi_tefahot import Mizrahi_Tefahot
+# from banks.ubank import Ubank
+# from banks.masad import Masad
+# from banks.jerusalem import Jerusalem
+# from banks.yahav import Yahav
 
 # --bank_code 12 --user_name 123 --pass 6879Focus08 --cred oVatNbs8ca3dr7820f05g --date_from 01/06/2017 --date_to 01/08/2017 --branch_no 547 --account_no 225156 -m
 # --bank_code 14 --user_name 123 --pass 456 --cred oVatNbs2ca8dr8e42f05g0 --date_from 01/06/2017 --branch_no 363 --account_no 646462 -m
@@ -25,21 +42,6 @@ chrome_options.add_argument('--disable-infobars')
 driver_folder = os.path.join(downloads_folder, 'chromedriver.exe')
 driver = webdriver.Chrome(driver_folder, chrome_options=chrome_options)
 driver.implicitly_wait(30)
-
-
-from banks.otsar import Otsar
-from banks.poalim import Poalim
-#from banks.leumi import Leumi
-#from banks.poalim import Poalim
-#from banks.discont import Discont
-#from banks.igud import Igud
-#from banks.benleumi import Benleumi
-#from banks.marcantil import Marcantil
-#from banks.mizrahi_tefahot import Mizrahi_Tefahot
-#from banks.ubank import Ubank
-#from banks.masad import Masad
-#from banks.jerusalem import Jerusalem
-#from banks.yahav import Yahav
 
 logging.root.handlers = []
 log_format = '[%(asctime)s]| %(levelname)-7s| %(message)-100s| {%(name)s|%(funcName)s|%(lineno)-3s}'
@@ -65,7 +67,7 @@ bank_dict = {
         '46': {'name': 'masad', 'login_url': 'https://online.bankmassad.co.il/wps/portal', 'title': 'בנק מסד'},
         '31': {'name': 'benleumi', 'login_url': 'https://online.fibi.co.il/wps/portal', 'title': 'הבנק הבינלאומי'},
 
-        #'11': {'name': 'discont', 'login_url': 'https://www.discountbank.co.il', 'title': 'בנק דיסקונט'},
+        # '11': {'name': 'discont', 'login_url': 'https://www.discountbank.co.il', 'title': 'בנק דיסקונט'},
         '11': {'name': 'discont', 'login_url': 'https://start.telebank.co.il/LoginPages/Logon?bank=d', 'title': 'בנק דיסקונט לישראל'},
         '17': {'name': 'marcantil', 'login_url': 'https://start.telebank.co.il/LoginPages/Logon?bank=m', 'title': 'מרכנתיל'},
 
@@ -106,16 +108,24 @@ def main():
         bank = bank_module(driver, opt_dict, bank_dict)
         bank.navigate_to_login()
         bank.login()
-        bank.navigate_to('last_trxs')
+
+        action = 'last_trxs'
+        bank.navigate_to(action)
         bank.show_last_trxs()
-        file = bank.export_data()
+        file = bank.export_data(action)
+        # bank.download_checks()
         bank.read_last_trxs_from_excel(file)
-        bank.navigate_to('credit_cards')
-        file = bank.export_data()
+
+        action = 'credit_cards'
+        bank.navigate_to(action)
+        file = bank.export_data(action)
         bank.read_credit_cards_charges_from_excel(file)
-        bank.navigate_to('loans')
-        file = bank.export_data()
+
+        action = 'loans'
+        bank.navigate_to(action)
+        file = bank.export_data(action)
         bank.read_loans_from_excel(file)
+
         dump_json(bank.results_dict, bank.name)
 
     except Exception as e:
@@ -126,8 +136,8 @@ def main():
 
 def dump_json(res_dict, bank_name):
     logging.info('Creating JSON dump')
-    #return json.dump(res_dict)
-    output_path = os.path.join(output_folder, 'bank_%s_output.json' % bank_name)
+    # return json.dump(res_dict)
+    output_path = os.path.join(downloads_folder, 'bank_%s_output.json' % bank_name)
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     with open(output_path, "w") as f:
@@ -142,8 +152,9 @@ def delete_previous_files():
         os.mkdir(os.path.join(downloads_folder, 'old'))
         logging.info('Creating old folder in %s' % downloads_folder)
 
-    for type in ('csv', 'xlsx'):
-        for file in glob.glob(os.path.join(downloads_folder, '*.%s' % type)):
+    file_types = ('csv', 'xls', 'xlsx', 'pdf', 'tmp', 'json')
+    for file_type in file_types:
+        for file in glob.glob(os.path.join(downloads_folder, '*.%s' % file_type)):
             # os.rename(file, os.path.join(downloads_folder, 'old', os.path.basename(file)))
             os.remove(file)
             logging.info('Move previous excel file to old folder - %s' % file)

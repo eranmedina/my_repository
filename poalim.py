@@ -158,3 +158,6 @@ class Poalim(BaseBank):
                 self.results_dict['loans'] = row_data[0].value
                 break
         os.remove(os.path.join(downloads_folder, file))
+
+    def download_checks(self):
+        pass

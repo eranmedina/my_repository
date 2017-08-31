@@ -27,6 +27,9 @@ class BaseBank(object):
         self.results_dict['user_data']['branch_no'] = opt_dict['branch_no']
         self.results_dict['user_data']['bank_code'] = opt_dict['bank_code']
 
+    def login(self):
+        pass
+
     def navigate_to_login(self, **kwargs):
         logging.info('Navigate to login started')
         self.driver.get(self.login_url)
